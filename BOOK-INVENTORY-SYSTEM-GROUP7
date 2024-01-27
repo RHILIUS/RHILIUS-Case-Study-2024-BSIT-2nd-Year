@@ -1,0 +1,606 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <conio.h>
+
+
+// Book
+typedef struct Book {
+    int num;
+    char title[100];
+    char author[100];
+    char genre[100];
+} Book;
+
+// Linked List
+typedef struct Node {
+  Book val;
+  struct Node *prev;
+  struct Node *next;
+} Node;
+
+typedef struct DoublyLinkedList {
+  Node *head;
+  Node *tail;
+} DoublyLinkedList;
+
+// Function Prototyping
+void showMainMenu();
+void option2SubMenu();
+void displayBooksNormally(DoublyLinkedList *list);
+void displayBooksAlphabetically(DoublyLinkedList *list);
+void addBook(DoublyLinkedList list);
+void searchBook(DoublyLinkedList list);
+void linearSearch(DoublyLinkedList list, int category, const char *targetTitle);
+void deleteBook(DoublyLinkedList *list);
+void updateBook(DoublyLinkedList *list);
+// Global Declaration
+  DoublyLinkedList list;
+
+// Main Menu Functions
+void showMainMenu() {
+
+  printf("\033[1;32mMAIN MENU\033[0m\n\n");
+  printf("1.) Add book\n");
+  printf("2.) Display books\n");
+  printf("3.) Search book\n");
+  printf("4.) Delete book\n");
+  printf("5.) Update book\n");
+
+  int choice;
+  printf("\nEnter choice: ");
+  scanf("%d", &choice);
+
+  switch (choice) {
+    case 1:
+      system("cls");
+      addBook(list);
+      break;
+    case 2:
+      system("cls");
+      option2SubMenu();
+      break;
+    case 3:
+      system("cls");
+      searchBook(list);
+      break;
+    case 4:
+      system("cls");
+      deleteBook(&list);
+      break;
+    case 5:
+      system("cls");
+      updateBook(&list);
+      break;
+    default:
+      system("cls");
+      printf("\x1b[31mInvalid Input\x1b[0m\n");
+      // printf("\n\033[1;31mInvalid Input!!!\033[0m\n");
+      showMainMenu();
+      
+  } 
+
+}
+
+void addBook(DoublyLinkedList list) {
+
+  int num;
+  char title[100];
+  char author[100];
+  char genre[100];
+  char another;
+
+  do {
+    Node *curr = (Node*)malloc(sizeof(Node));
+    num = list.tail->val.num;
+    num = num + 1;
+    printf("Enter book title: ");
+    scanf(" %49[^\n]", title);
+    printf("Enter book author: ");
+    scanf(" %49[^\n]", author);
+    printf("Enter book genre: ");
+    scanf(" %49[^\n]", genre);
+
+
+    curr->val.num = num;
+    strcpy(curr->val.title, title);
+    strcpy(curr->val.author, author);
+    strcpy(curr->val.genre, genre);
+
+    list.tail->next = curr;
+    curr->prev = list.tail;
+    list.tail = curr;
+    curr->next = NULL;
+
+    printf("\nDo you want to record again? (Y/N): ");
+    scanf(" %c", &another);
+    printf("--------------------------------------\n");
+
+  } while (another == 'Y' || another == 'y');
+  system("cls");
+  showMainMenu();
+}
+
+void option2SubMenu() {
+
+  int choice;
+  printf("1.) Display normally\n");
+  printf("2.) Display alphabetically\n");
+
+  printf("Enter choice: ");
+  scanf("%d", &choice);
+
+  if (choice == 1) {
+    system("cls");
+    displayBooksNormally(&list);
+  } 
+
+  else if (choice == 2){
+    system("cls");
+    displayBooksAlphabetically(&list);
+  }
+  
+  else {
+    system("cls");
+    printf("\x1b[31mInvalid Input!!\x1b[0m\n");
+    option2SubMenu();
+  }
+
+}
+
+void displayBooksNormally(DoublyLinkedList *list) {
+
+  Node *curr = list->head;
+
+
+  printf("\033[1;32mList of Books: \033[0m\n\n");
+  while (curr != NULL) {
+    
+    printf("ID: %d\n", curr->val.num);
+    printf("Title: %s\n", curr->val.title);
+    printf("Author: %s\n", curr->val.author);
+    printf("Genre: %s\n", curr->val.genre);
+    printf("Address: %p\n", curr);
+    printf("Prev: %p\n", curr->prev);
+    printf("Next: %p\n", curr->next);
+    curr = curr->next;
+
+    printf("--------------------------\n");
+  }
+  printf("\n");
+
+  printf("Press any key to exit...");
+  getch();
+  system("cls");
+  showMainMenu();
+
+}
+
+void displayBooksAlphabetically(DoublyLinkedList *list) {
+
+  Node *curr = list->head;
+  int numberOfBooks = 0;
+
+  // Count the number of bookss
+  while (curr != NULL) {
+    numberOfBooks++; // count the number of elements
+    curr = curr->next;
+  }
+
+  // Transfer the list elements to an array
+  Book book[numberOfBooks];
+
+  curr = list->head;
+  int count = 0;
+
+  while (curr != NULL) {
+
+    book[count].num = curr->val.num; 
+    strcpy(book[count].title, curr->val.title);
+    strcpy(book[count].author, curr->val.author);
+    strcpy(book[count].genre, curr->val.genre);
+
+    count++;
+    curr = curr->next;
+
+
+  }
+
+  // // Print
+  // printf("Before sorting:\n");
+  // for (int i = 0; i < numberOfBooks; i++) {
+  //   printf("%d\n", book[i].num);
+  //   printf("%s\n", book[i].title);
+  //   printf("%s\n", book[i].author);
+  //   printf("%s\n", book[i].genre);
+  //   printf("====================\n");
+  // }
+
+  // Bubble sort books alphabetically
+  int withEx = 1;
+  Book temp;
+
+  while (withEx) {
+    withEx = 0;
+    for (int i = 0; i < numberOfBooks-1; i++) {
+
+      // printf("|%s| is being compared to |%s|\n", book[i].title, book[i+1].title);
+      if (stricmp(book[i].title, book[i+1].title) > 0) {
+        // printf("|%s| is higher than |%s|\n", book[i].title, book[i+1].title);
+        temp = book[i];
+        book[i] = book[i+1];
+        book[i+1] = temp;
+
+        withEx = 1;
+      }
+
+      // printf("=======================\n");
+
+    }
+  }
+
+  // printf("\n\n\n\n");
+// Print
+    printf("\033[1;32mList of books in alphabetical order\033[0m\n\n");
+
+ //  printf("List of books in alphabetical order\n");
+  for (int i = 0; i < numberOfBooks; i++) {
+    printf("Title: %s\n", book[i].title);
+    printf("ID: %d\n", book[i].num);
+    printf("Author: %s\n", book[i].author);
+    printf("Genre: %s\n", book[i].genre);
+    printf("================================\n");
+  }
+
+  printf("Press any key to exit...");
+  getch();
+  system("cls");
+  showMainMenu();
+
+
+}
+
+
+
+void searchBook(DoublyLinkedList list) {
+
+ //  printf("\033[1;32mMAIN MENU\033[0m\n\n");
+  printf("\033[1;32mChoose what category to search: \033[0m\n\n");
+  printf("1.) Title\n");
+  printf("2.) Author\n");
+  printf("3.) Theme\n");
+
+  int num;
+  printf("Enter number: ");
+  scanf("%d", &num);
+
+  char str[100];
+  printf("Enter text: ");
+  scanf(" %49[^\n]", str);
+
+  linearSearch(list, num, str);
+}
+
+void deleteBook(DoublyLinkedList *list) {
+  printf("Enter ID to delete: "); 
+  int idToDelete;
+  scanf("%d", &idToDelete);
+  
+  Node *curr = list->head;  
+  Node *prev = NULL;
+  
+  // if (curr->prev ) {
+  //   curr->next->prev == NULL;
+  //   list->head = curr;
+  //   printf("Number 1 is deleted!\n");
+  //   displayBooksNormallyNormally(list);
+  // }
+
+  // while (curr != NULL) {
+
+  //   printf("%d\n", curr->val.num);
+  //   curr = curr->next;
+  // }
+
+    // Traverse to count the number of elements in the list
+
+    int numOfElements = 0;
+    while (curr != NULL) {
+
+      numOfElements++;
+      curr = curr->next;
+    }
+
+    // Check if the id is valid
+    if (idToDelete > numOfElements) {
+      system("cls");
+      printf("\x1b[31mInvalid ID!!\x1b[0m\n");
+      // printf("Invalid ID!!!!!!\n");
+
+      deleteBook(list);
+    }
+
+    curr = list->head;
+    // Traverse the list to find the node with the specified value
+    while (curr != NULL && curr->val.num != idToDelete) {
+        prev = curr;
+        curr = curr->next;
+    }
+
+    // If the node is found
+    if (curr != NULL) {
+        // If the node is the first node (head)
+        if (prev == NULL) {
+            list->head = curr->next;
+        } else {
+            prev->next = curr->next;
+        }
+
+        // Free the memory of the deleted node
+        free(curr);
+    }
+    displayBooksNormally(list);
+}
+
+void updateBook(DoublyLinkedList *list) {
+  Node *curr = list->head;
+
+  int idToUpdate;
+  printf("Enter id number to update: ");
+  scanf("%d", &idToUpdate);
+
+  // Traverse to count the number of elements in the list
+
+    int numOfElements = 0;
+    while (curr != NULL) {
+
+      numOfElements++;
+      curr = curr->next;
+    }
+
+    // Check if the id is valid
+    if (idToUpdate > numOfElements) {
+      system("cls");
+      printf("\x1b[31mInvalid ID!!!!!!\x1b[0m\n");
+      // printf("Invalid ID!!!!!!\n");
+
+      updateBook(list);
+    }
+
+    curr = list->head;
+
+
+
+
+  
+  while (curr != NULL) {
+    if (curr->val.num == idToUpdate) {
+      printf("1.) Edit title\n");
+      printf("2.) Edit author\n");
+      printf("3.) Edit genre\n");
+      printf("\033[1;32mEnter field you want to update\033[0m\n");
+      // printf("Enter field you want to update: ");
+      int choice;
+      char newTitle[100];
+      char newAuthor[100];
+      char newGenre[100];
+      scanf("%d", &choice);
+
+      if (choice == 1) {
+      printf("Enter new title: ");
+      scanf(" %49[^\n]", newTitle);
+
+      strcpy(curr->val.title, newTitle);
+
+      printf("Successfully updated title!\n");
+      } else if (choice == 2) {
+        printf("Enter new author: ");
+        scanf(" %49[^\n]", newAuthor);
+
+        strcpy(curr->val.author, newAuthor);
+
+        printf("Successfully updated author!\n");
+      } else if (choice == 3) {
+        printf("Enter new genre: ");
+        scanf(" %49[^\n]", newGenre);
+
+        strcpy(curr->val.genre, newGenre);
+
+        printf("Successfully updated genre!\n");
+      } else {
+        printf("Invalid choice!\n");
+        updateBook(list);
+      }
+
+      printf("Do you want to update again?? Y/N\n");
+      char chosen = getch();
+      system("cls");
+      if (chosen == 'Y' || choice == 'y') {
+        updateBook(list);
+      } else {
+        showMainMenu();
+      }
+    }
+    curr = curr->next;
+  }
+    
+
+}
+
+// Logic
+void linearSearch(DoublyLinkedList list, int category, const char *string) {
+
+  Node *curr = list.head;
+  int bookHasFound = 0;
+  
+  if (category == 2) {
+    while (curr != NULL) {
+      // printf("%d\n", stricmp(curr->val.title, string));
+      if ((stricmp(curr->val.author, string)) == 0) {
+        printf("--------------------------------------\n");
+        
+        bookHasFound = 1;
+        printf("Book is found!!\n");
+        printf("Book ID: %d\n", curr->val.num);
+        printf("Book Title: %s\n", curr->val.title);
+        printf("Book Author: %s\n", curr->val.author);
+        printf("Book Genre: %s\n", curr->val.genre);
+      }
+
+      curr = curr->next;
+    }
+  } else if (category == 1) {
+    while (curr != NULL) {
+      // printf("%d\n", stricmp(curr->val.title, string));
+      if ((stricmp(curr->val.title, string)) == 0) {
+        printf("--------------------------------------\n");
+        
+        bookHasFound = 1;
+        printf("Book is found!!\n");
+        printf("Book ID: %d\n", curr->val.num);
+        printf("Book Title: %s\n", curr->val.title);
+        printf("Book Author: %s\n", curr->val.author);
+        printf("Book Genre: %s\n", curr->val.genre);
+      }
+
+      curr = curr->next;
+    }
+  } else if (category == 3) {
+    while (curr != NULL) {
+      // printf("%d\n", stricmp(curr->val.genre, string));
+      if ((stricmp(curr->val.genre, string)) == 0) {
+        printf("--------------------------------------\n");
+
+        bookHasFound = 1;
+        printf("Book is found!!\n");
+        printf("Book ID: %d\n", curr->val.num);
+        printf("Book Title: %s\n", curr->val.title);
+        printf("Book Author: %s\n", curr->val.author);
+        printf("Book Genre: %s\n", curr->val.genre);
+      }
+
+      curr = curr->next;
+    }
+  } else {
+    system("cls");
+    printf("\x1b[31mInvalid choice!!\x1b[0m\n");
+   // printf("Invalid choice!!\n");
+    searchBook(list);
+
+  }
+
+
+  if (!bookHasFound) {
+    printf("\x1b[31mBook is not found!!\x1b[0m\n");
+    // printf("Book is not found!!\n");
+  }
+  printf("=========================================\n");
+  printf("Do you want to search another book? Y/N\n");
+
+  int choice = getch();
+  system("cls");
+  if (choice == 'Y' || choice == 'y') {
+    searchBook(list);
+  }
+  showMainMenu();
+}
+
+
+int main() {
+
+  Node *curr;
+
+
+  // Initial books
+  curr = (Node*)malloc(sizeof(Node));
+  curr->val.num = 1;
+  strcpy(curr->val.title, "To Kill a Mockingbird");
+  strcpy(curr->val.author, "Harper Lee");
+  strcpy(curr->val.genre, "Fiction");
+  list.head = curr;
+  list.tail = curr;
+  curr->prev = NULL;
+  curr->next = NULL;
+
+  curr = (Node*)malloc(sizeof(Node));
+  curr->val.num = 2;
+  strcpy(curr->val.title, "1984");
+  strcpy(curr->val.author, "George Orwell");
+  strcpy(curr->val.genre, "Fiction");
+  list.tail->next = curr;
+  curr->prev = list.tail;
+  list.tail = curr;
+  curr->next = NULL;
+
+  curr = (Node*)malloc(sizeof(Node));
+  curr->val.num = 3;
+  strcpy(curr->val.title, "One Hundred Years of Solitude");
+  strcpy(curr->val.author, "Gabriel Garcia Marquez");
+  strcpy(curr->val.genre, "Epic");
+  list.tail->next = curr;
+  curr->prev = list.tail;
+  list.tail = curr;
+  curr->next = NULL;
+
+  curr = (Node*)malloc(sizeof(Node));
+  curr->val.num = 4;
+  strcpy(curr->val.title, "The Great Gatsby");
+  strcpy(curr->val.author, "F. Scott Fitzgerald");
+  strcpy(curr->val.genre, "Fiction");
+  list.tail->next = curr;
+  curr->prev = list.tail;
+  list.tail = curr;
+  curr->next = NULL;  
+
+  curr = (Node*)malloc(sizeof(Node));
+  curr->val.num = 5;
+  strcpy(curr->val.title, "Pride and Prejudice");
+  strcpy(curr->val.author, "Jane Austen");
+  strcpy(curr->val.genre, "Romance");
+  list.tail->next = curr;
+  curr->prev = list.tail;
+  list.tail = curr;
+  curr->next = NULL;  
+  
+
+  // curr = list.head;
+  
+  // while (curr != NULL) {
+  //   printf("%d\n", curr->val.num);
+  //   printf("%s\n", curr->val.title);
+  //   printf("%s\n", curr->val.author);
+  //   printf("%s\n", curr->val.genre);
+  //   curr = curr->next;
+
+  //   printf("--------------------------\n");
+  // }
+  // printf("\n");
+
+  // printf("==============================\n");
+
+  // curr = list.tail;
+  
+  // while (curr != NULL) {
+  //   printf("%d\n", curr->val.num);
+  //   printf("%s\n", curr->val.title);
+  //   printf("%s\n", curr->val.author);
+  //   printf("%s\n", curr->val.genre);
+  //   curr = curr->prev;
+
+  //   printf("--------------------------\n");
+  // }
+  // printf("\n");
+
+  
+  showMainMenu();
+ 
+
+
+  // searchBook(list);
+
+  // curr = (Node*)malloc(sizeof(Node));
+  // curr->val.num = 
+  return 0;
+
+
+}
